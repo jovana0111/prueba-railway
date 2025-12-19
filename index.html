@@ -1,46 +1,747 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
-    <title>Mi Página en Railway</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HOE Monitor - Dashboard</title>
     <style>
+        :root {
+            --bg-primary: #0d1117;
+            --bg-secondary: #161b22;
+            --bg-tertiary: #21262d;
+            --text-primary: #e6edf3;
+            --text-secondary: #8b949e;
+            --accent-green: #3fb950;
+            --accent-blue: #58a6ff;
+            --accent-orange: #d29922;
+            --accent-red: #f85149;
+            --accent-purple: #a371f7;
+            --border-color: #30363d;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
         body {
-            font-family: Arial, sans-serif;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
             min-height: 100vh;
         }
-        .container {
-            background: rgba(0, 0, 0, 0.7);
-            padding: 30px;
-            border-radius: 10px;
-            margin-top: 50px;
+
+        .header {
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-color);
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
-        h1 {
-            color: #4CAF50;
+
+        .header h1 {
+            font-size: 1.3rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .connection-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.85rem;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--accent-red);
+            animation: pulse 2s infinite;
+        }
+
+        .status-dot.connected { background: var(--accent-green); }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .main-container {
+            display: grid;
+            grid-template-columns: 1fr 380px;
+            height: calc(100vh - 56px);
+        }
+
+        .left-panel {
+            display: grid;
+            grid-template-rows: auto 1fr;
+            gap: 15px;
+            padding: 15px;
+            overflow: hidden;
+        }
+
+        .top-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 15px;
+        }
+
+        .card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 15px;
+        }
+
+        .card-title {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+            margin-bottom: 10px;
+            letter-spacing: 0.5px;
+        }
+
+        .current-state { text-align: center; }
+
+        .state-display {
+            font-size: 3rem;
+            font-weight: bold;
+            color: var(--accent-blue);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .state-step {
+            font-size: 1rem;
+            color: var(--text-secondary);
+            margin-top: 5px;
+        }
+
+        .process-id {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-top: 10px;
+            font-family: monospace;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 8px;
+            background: var(--bg-tertiary);
+            border-radius: 6px;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .stat-value.success { color: var(--accent-green); }
+        .stat-value.error { color: var(--accent-red); }
+        .stat-value.warning { color: var(--accent-orange); }
+        .stat-value.info { color: var(--accent-blue); }
+
+        .stat-label {
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            margin-top: 3px;
+        }
+
+        .steps-timeline {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 10px;
+        }
+
+        .step-node {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .step-circle {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.9rem;
+            background: var(--bg-tertiary);
+            border: 2px solid var(--border-color);
+            transition: all 0.3s ease;
+        }
+
+        .step-circle.completed {
+            background: var(--accent-green);
+            border-color: var(--accent-green);
+            color: #000;
+        }
+
+        .step-circle.current {
+            background: var(--accent-blue);
+            border-color: var(--accent-blue);
+            color: #000;
+            animation: pulse-current 1.5s infinite;
+        }
+
+        @keyframes pulse-current {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(88, 166, 255, 0.4); }
+            50% { box-shadow: 0 0 0 8px rgba(88, 166, 255, 0); }
+        }
+
+        .step-label {
+            font-size: 0.65rem;
+            color: var(--text-secondary);
+            text-align: center;
+            max-width: 50px;
+        }
+
+        .step-connector {
+            flex: 1;
+            height: 2px;
+            background: var(--border-color);
+            margin: 0 5px;
+            margin-bottom: 20px;
+        }
+
+        .step-connector.completed { background: var(--accent-green); }
+
+        .history-section {
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .history-list {
+            flex: 1;
+            overflow-y: auto;
+            padding-right: 5px;
+        }
+
+        .history-item {
+            display: grid;
+            grid-template-columns: 90px 1fr 80px 100px;
+            gap: 10px;
+            padding: 10px 12px;
+            background: var(--bg-tertiary);
+            border-radius: 6px;
+            margin-bottom: 8px;
+            font-size: 0.85rem;
+            align-items: center;
+            border-left: 3px solid var(--border-color);
+            transition: all 0.2s ease;
+        }
+
+        .history-item.completed { border-left-color: var(--accent-green); }
+        .history-item.failed { border-left-color: var(--accent-red); }
+        .history-item.in-progress {
+            border-left-color: var(--accent-blue);
+            background: rgba(88, 166, 255, 0.1);
+        }
+
+        .history-id {
+            font-family: monospace;
+            color: var(--text-secondary);
+        }
+
+        .history-step-badges {
+            display: flex;
+            gap: 3px;
+        }
+
+        .step-badge {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            font-weight: bold;
+            background: var(--bg-secondary);
+            color: var(--text-secondary);
+        }
+
+        .step-badge.done {
+            background: var(--accent-green);
+            color: #000;
+        }
+
+        .step-badge.current {
+            background: var(--accent-blue);
+            color: #000;
+            animation: pulse 1s infinite;
+        }
+
+        .step-badge.error {
+            background: var(--accent-red);
+            color: #fff;
+        }
+
+        .status-badge {
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .status-badge.completed {
+            background: rgba(63, 185, 80, 0.2);
+            color: var(--accent-green);
+        }
+
+        .status-badge.failed {
+            background: rgba(248, 81, 73, 0.2);
+            color: var(--accent-red);
+        }
+
+        .status-badge.in-progress {
+            background: rgba(88, 166, 255, 0.2);
+            color: var(--accent-blue);
+        }
+
+        .history-time {
+            text-align: right;
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+        }
+
+        .right-panel {
+            background: var(--bg-secondary);
+            border-left: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .terminal-header {
+            padding: 10px 15px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .terminal-title { font-size: 0.85rem; font-weight: 600; }
+
+        .terminal-controls { display: flex; gap: 8px; }
+
+        .terminal-btn {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .terminal-btn:hover {
+            background: var(--bg-primary);
+            color: var(--text-primary);
+        }
+
+        .terminal-btn.active {
+            background: var(--accent-blue);
+            color: #000;
+            border-color: var(--accent-blue);
+        }
+
+        .terminal-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            line-height: 1.5;
+        }
+
+        .log-entry {
+            padding: 3px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.03);
+        }
+
+        .log-time {
+            color: var(--text-secondary);
+            margin-right: 8px;
+        }
+
+        .log-entry.INFO .log-msg { color: var(--text-primary); }
+        .log-entry.SUCCESS .log-msg { color: var(--accent-green); }
+        .log-entry.WARNING .log-msg { color: var(--accent-orange); }
+        .log-entry.ERROR .log-msg { color: var(--accent-red); }
+
+        .log-stats {
+            padding: 8px 15px;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            gap: 15px;
+            font-size: 0.75rem;
+        }
+
+        .log-stat { display: flex; align-items: center; gap: 5px; }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: var(--bg-primary); }
+        ::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 3px; }
+
+        @media (max-width: 1200px) {
+            .main-container {
+                grid-template-columns: 1fr;
+                grid-template-rows: 1fr 300px;
+            }
+            .right-panel {
+                border-left: none;
+                border-top: 1px solid var(--border-color);
+            }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>¡Funciona! 🚀</h1>
-        <p>Mi aplicación está corriendo en Railway con Docker.</p>
-        <p>Este es solo un archivo HTML estático como prueba.</p>
-        <p>Si ves esto, significa que la configuración de Docker funciona correctamente.</p>
-        
-        <h2>Próximos pasos:</h2>
-        <ul>
-            <li>Agregar más archivos estáticos</li>
-            <li>Implementar un servidor Node.js, Python, etc.</li>
-            <li>Conectar una base de datos</li>
-            <li>Configurar dominio personalizado</li>
-        </ul>
-        
-        <footer>
-            <p>Desplegado con Railway + Docker</p>
-        </footer>
+    <div class="header">
+        <h1>🏭 HOE Monitor <span style="font-size: 0.8rem; color: var(--text-secondary);">Bautista Figueroa</span></h1>
+        <div class="connection-status">
+            <div class="status-dot" id="connectionDot"></div>
+            <span id="connectionText">Desconectado</span>
+        </div>
     </div>
+
+    <div class="main-container">
+        <div class="left-panel">
+            <div class="top-section">
+                <div class="card current-state">
+                    <div class="card-title">Estado Actual</div>
+                    <div class="state-display" id="currentState">S0</div>
+                    <div class="state-step" id="currentStepDesc">Esperando inicio...</div>
+                    <div class="process-id">ID: <span id="currentProcessId">--------</span></div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">Estadísticas de Sesión</div>
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <div class="stat-value success" id="statCompleted">0</div>
+                            <div class="stat-label">Completados</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value error" id="statFailed">0</div>
+                            <div class="stat-label">Fallidos</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value warning" id="statSkips">0</div>
+                            <div class="stat-label">Saltos</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value info" id="statTimeouts">0</div>
+                            <div class="stat-label">Timeouts</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">Progreso del Proceso</div>
+                    <div class="steps-timeline">
+                        <div class="step-node"><div class="step-circle" id="step1">1</div><div class="step-label">Botella</div></div>
+                        <div class="step-connector" id="conn1"></div>
+                        <div class="step-node"><div class="step-circle" id="step2">2</div><div class="step-label">Bot+Per</div></div>
+                        <div class="step-connector" id="conn2"></div>
+                        <div class="step-node"><div class="step-circle" id="step3">3</div><div class="step-label">Zona 1</div></div>
+                        <div class="step-connector" id="conn3"></div>
+                        <div class="step-node"><div class="step-circle" id="step4">4</div><div class="step-label">Zona 2</div></div>
+                        <div class="step-connector" id="conn4"></div>
+                        <div class="step-node"><div class="step-circle" id="step5">5</div><div class="step-label">Zona 3</div></div>
+                        <div class="step-connector" id="conn5"></div>
+                        <div class="step-node"><div class="step-circle" id="step6">6</div><div class="step-label">Retorno</div></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card history-section">
+                <div class="card-title">Historial de Procesos (en vivo)</div>
+                <div class="history-list" id="historyList"></div>
+            </div>
+        </div>
+
+        <div class="right-panel">
+            <div class="terminal-header">
+                <div class="terminal-title">📟 Terminal</div>
+                <div class="terminal-controls">
+                    <button class="terminal-btn active" id="autoScrollBtn" onclick="toggleAutoScroll()">Auto-scroll</button>
+                    <button class="terminal-btn" onclick="clearLogs()">Limpiar</button>
+                </div>
+            </div>
+            <div class="terminal-body" id="terminalBody"></div>
+            <div class="log-stats">
+                <div class="log-stat">Total: <strong id="logTotal">0</strong></div>
+                <div class="log-stat" style="color: var(--accent-green)">OK: <strong id="logSuccess">0</strong></div>
+                <div class="log-stat" style="color: var(--accent-orange)">Warn: <strong id="logWarning">0</strong></div>
+                <div class="log-stat" style="color: var(--accent-red)">Err: <strong id="logError">0</strong></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const WS_URL = 'ws://localhost:8765';
+        const MAX_LOGS = 500;
+        const MAX_HISTORY = 50;
+
+        let ws = null;
+        let autoScroll = true;
+        let logCounts = { total: 0, success: 0, warning: 0, error: 0 };
+        let stats = { completed: 0, failed: 0, skips: 0, timeouts: 0 };
+        let processes = new Map();
+        let currentProcessId = null;
+
+        const STEP_DESCRIPTIONS = {
+            'S0': 'Esperando inicio...',
+            'S1': 'Paso 1: Botella detectada',
+            'S2': 'Paso 2: Botella + Persona',
+            'S3': 'Paso 3: Botella en zona 1',
+            'S4': 'Paso 4: Persona en zona 2',
+            'S5': 'Paso 5: Persona en zona 3',
+            'S6': 'Paso 6: Botella retornó'
+        };
+
+        // Mapeo estado -> paso completado
+        const STATE_TO_STEP = { 'S1': 1, 'S2': 2, 'S3': 3, 'S4': 4, 'S5': 5 };
+
+        function connect() {
+            ws = new WebSocket(WS_URL);
+            
+            ws.onopen = () => {
+                document.getElementById('connectionDot').classList.add('connected');
+                document.getElementById('connectionText').textContent = 'Conectado';
+                addLog('Sistema conectado', 'SUCCESS');
+            };
+            
+            ws.onclose = () => {
+                document.getElementById('connectionDot').classList.remove('connected');
+                document.getElementById('connectionText').textContent = 'Reconectando...';
+                setTimeout(connect, 1500);
+            };
+            
+            ws.onmessage = (event) => {
+                try {
+                    handleMessage(JSON.parse(event.data));
+                } catch (e) {}
+            };
+        }
+
+        function handleMessage(data) {
+            if (data.type === 'LOG') {
+                addLog(data.message, data.level);
+            } else if (data.type === 'EVENT') {
+                handleEvent(data);
+            }
+        }
+
+        function handleEvent(data) {
+            const { event_type, process_id, state, step, rule } = data;
+            const shortId = process_id ? process_id.substring(0, 8) : '--------';
+            
+            currentProcessId = process_id;
+            document.getElementById('currentProcessId').textContent = shortId;
+            
+            if (state) updateState(state);
+
+            // Asegurar que el proceso existe
+            const proc = getOrCreateProcess(process_id);
+            
+            // Actualizar pasos basado en estado actual
+            if (state && STATE_TO_STEP[state]) {
+                const completedStep = STATE_TO_STEP[state];
+                for (let i = 1; i <= completedStep; i++) {
+                    if (!proc.steps.includes(i)) proc.steps.push(i);
+                }
+                proc.lastStep = completedStep;
+                proc.currentStep = completedStep + 1;
+            }
+            
+            switch (event_type) {
+                case 'STEP_OK':
+                    if (!proc.steps.includes(step)) proc.steps.push(step);
+                    proc.lastStep = Math.max(proc.lastStep, step);
+                    proc.currentStep = step + 1;
+                    updateTimeline(proc.steps, step);
+                    break;
+                    
+                case 'PROCESS_COMPLETE':
+                    proc.status = 'completed';
+                    proc.duration = data.duration_total;
+                    proc.steps = [1, 2, 3, 4, 5, 6];
+                    proc.currentStep = null;
+                    stats.completed++;
+                    updateStats();
+                    resetTimeline();
+                    break;
+                    
+                case 'VIOLATION':
+                    proc.status = 'failed';
+                    proc.errorStep = step;
+                    proc.errorReason = rule;
+                    proc.currentStep = null;
+                    if (rule && rule.includes('SKIPPED')) stats.skips++;
+                    else stats.timeouts++;
+                    stats.failed++;
+                    updateStats();
+                    break;
+                    
+                case 'RESET':
+                    if (data.reason !== 'complete' && proc.status === 'in-progress') {
+                        proc.status = 'failed';
+                        proc.errorReason = data.reason;
+                        proc.currentStep = null;
+                    }
+                    break;
+            }
+            
+            renderHistory();
+        }
+
+        function getOrCreateProcess(processId) {
+            if (!processes.has(processId)) {
+                processes.set(processId, {
+                    id: processId,
+                    shortId: processId.substring(0, 8),
+                    steps: [],
+                    status: 'in-progress',
+                    startTime: Date.now(),
+                    lastStep: 0,
+                    currentStep: 1,
+                    errorStep: null,
+                    errorReason: null
+                });
+            }
+            return processes.get(processId);
+        }
+
+        function updateState(state) {
+            document.getElementById('currentState').textContent = state;
+            document.getElementById('currentStepDesc').textContent = STEP_DESCRIPTIONS[state] || state;
+            document.getElementById('currentState').style.color = state === 'S0' ? 'var(--text-secondary)' : 'var(--accent-blue)';
+        }
+
+        function updateTimeline(completedSteps, currentStep) {
+            for (let i = 1; i <= 6; i++) {
+                const stepEl = document.getElementById(`step${i}`);
+                const connEl = document.getElementById(`conn${i}`);
+                stepEl.classList.remove('completed', 'current');
+                if (connEl) connEl.classList.remove('completed');
+                
+                if (completedSteps.includes(i)) {
+                    stepEl.classList.add('completed');
+                    if (connEl) connEl.classList.add('completed');
+                } else if (i === currentStep + 1) {
+                    stepEl.classList.add('current');
+                }
+            }
+        }
+
+        function resetTimeline() {
+            for (let i = 1; i <= 6; i++) {
+                document.getElementById(`step${i}`).classList.remove('completed', 'current');
+                const conn = document.getElementById(`conn${i}`);
+                if (conn) conn.classList.remove('completed');
+            }
+        }
+
+        function updateStats() {
+            document.getElementById('statCompleted').textContent = stats.completed;
+            document.getElementById('statFailed').textContent = stats.failed;
+            document.getElementById('statSkips').textContent = stats.skips;
+            document.getElementById('statTimeouts').textContent = stats.timeouts;
+        }
+
+        function renderHistory() {
+            const container = document.getElementById('historyList');
+            const sorted = Array.from(processes.values()).sort((a, b) => b.startTime - a.startTime).slice(0, MAX_HISTORY);
+            
+            container.innerHTML = sorted.map(proc => {
+                const elapsed = proc.duration || ((Date.now() - proc.startTime) / 1000);
+                const timeStr = elapsed < 60 ? `${elapsed.toFixed(1)}s` : `${(elapsed/60).toFixed(1)}m`;
+                
+                let stepBadges = '';
+                for (let i = 1; i <= 6; i++) {
+                    let cls = '';
+                    if (proc.steps.includes(i)) cls = 'done';
+                    else if (proc.status === 'in-progress' && proc.currentStep === i) cls = 'current';
+                    else if (proc.errorStep === i) cls = 'error';
+                    stepBadges += `<div class="step-badge ${cls}">${i}</div>`;
+                }
+                
+                const statusText = proc.status === 'completed' ? '✓ OK' : proc.status === 'failed' ? '✗ FALLO' : `● PASO ${proc.currentStep || '?'}`;
+                
+                return `
+                    <div class="history-item ${proc.status}">
+                        <div class="history-id">${proc.shortId}</div>
+                        <div class="history-step-badges">${stepBadges}</div>
+                        <div><span class="status-badge ${proc.status}">${statusText}</span></div>
+                        <div class="history-time">${timeStr}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function addLog(message, level = 'INFO') {
+            const container = document.getElementById('terminalBody');
+            const time = new Date().toLocaleTimeString('es-ES', { hour12: false });
+            
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${level}`;
+            entry.innerHTML = `<span class="log-time">${time}</span><span class="log-msg">${escapeHtml(message)}</span>`;
+            container.appendChild(entry);
+            
+            while (container.children.length > MAX_LOGS) container.removeChild(container.firstChild);
+            
+            logCounts.total++;
+            if (level === 'SUCCESS') logCounts.success++;
+            else if (level === 'WARNING') logCounts.warning++;
+            else if (level === 'ERROR') logCounts.error++;
+            
+            document.getElementById('logTotal').textContent = logCounts.total;
+            document.getElementById('logSuccess').textContent = logCounts.success;
+            document.getElementById('logWarning').textContent = logCounts.warning;
+            document.getElementById('logError').textContent = logCounts.error;
+            
+            if (autoScroll) container.scrollTop = container.scrollHeight;
+        }
+
+        function clearLogs() {
+            document.getElementById('terminalBody').innerHTML = '';
+            logCounts = { total: 0, success: 0, warning: 0, error: 0 };
+            document.getElementById('logTotal').textContent = '0';
+            document.getElementById('logSuccess').textContent = '0';
+            document.getElementById('logWarning').textContent = '0';
+            document.getElementById('logError').textContent = '0';
+        }
+
+        function toggleAutoScroll() {
+            autoScroll = !autoScroll;
+            document.getElementById('autoScrollBtn').classList.toggle('active', autoScroll);
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        connect();
+        renderHistory();
+        
+        // Actualizar tiempos cada segundo
+        setInterval(() => {
+            if (processes.size > 0) renderHistory();
+        }, 1000);
+    </script>
 </body>
 </html>
