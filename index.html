@@ -3,9 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HOE Monitor - Dashboard</title>
+    <title>Sistema UNIPRES - Monitoreo Inteligente</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
+            /* Variables del tema principal */
+            --primary-dark: #07090E;
+            --secondary-dark: #131E29;
+            --accent-blue: #202A44;
+            --neutral-gray: #53565A;
+            --light-text: #D9D9D6;
+            --success-green: #4CAF50;
+            --warning-orange: #FF9800;
+            --danger-red: #F44336;
+            --info-blue: #2196F3;
+            --purple: #9C27B0;
+            
+            /* Variables del tema HOE */
             --bg-primary: #0d1117;
             --bg-secondary: #161b22;
             --bg-tertiary: #21262d;
@@ -19,25 +33,460 @@
             --border-color: #30363d;
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: var(--bg-primary);
-            color: var(--text-primary);
+            background-color: var(--primary-dark);
+            color: var(--light-text);
+            min-height: 100vh;
+            display: flex;
+        }
+
+        /* Panel lateral */
+        .sidebar {
+            width: 250px;
+            background-color: var(--secondary-dark);
+            padding: 30px 20px;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid var(--accent-blue);
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 100;
+            transition: transform 0.3s ease;
+        }
+
+        .logo-container {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .logo-main {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--light-text);
+            letter-spacing: 2px;
+            margin-bottom: 5px;
+        }
+
+        .logo-subtitle {
+            font-size: 14px;
+            color: var(--neutral-gray);
+            letter-spacing: 3px;
+            text-transform: uppercase;
+        }
+
+        .nav-menu {
+            list-style: none;
+            margin-top: 30px;
+            flex-grow: 1;
+        }
+
+        .nav-item {
+            margin-bottom: 15px;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            color: var(--light-text);
+            text-decoration: none;
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+
+        .nav-link i {
+            margin-right: 12px;
+            font-size: 18px;
+            width: 24px;
+            text-align: center;
+        }
+
+        .nav-link:hover, .nav-link.active {
+            background-color: var(--accent-blue);
+            color: white;
+        }
+
+        .user-info {
+            padding: 20px 0;
+            border-top: 1px solid var(--neutral-gray);
+            display: flex;
+            align-items: center;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: var(--accent-blue);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 12px;
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        .user-details h4 {
+            font-size: 16px;
+            margin-bottom: 3px;
+        }
+
+        .user-details p {
+            font-size: 12px;
+            color: var(--neutral-gray);
+        }
+
+        /* Contenido principal */
+        .main-content {
+            flex: 1;
+            padding: 30px;
+            overflow-y: auto;
+            display: none;
+            margin-left: 250px;
+            width: calc(100% - 250px);
             min-height: 100vh;
         }
 
+        .main-content.active {
+            display: block;
+        }
+
         .header {
+            margin-bottom: 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .header-left {
+            flex: 1;
+        }
+
+        .header-right {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .page-title {
+            font-size: 32px;
+            font-weight: 600;
+            color: var(--light-text);
+            margin-bottom: 10px;
+        }
+
+        .page-subtitle {
+            font-size: 16px;
+            color: var(--neutral-gray);
+        }
+
+        /* Dashboard cards */
+        .dashboard-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+
+        .dashboard-card {
+            background-color: var(--secondary-dark);
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s, box-shadow 0.3s;
+            border-top: 4px solid var(--accent-blue);
+        }
+
+        .dashboard-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .dashboard-card.warning {
+            border-top-color: var(--warning-orange);
+        }
+
+        .dashboard-card.success {
+            border-top-color: var(--success-green);
+        }
+
+        .dashboard-card.danger {
+            border-top-color: var(--danger-red);
+        }
+
+        .dashboard-card.info {
+            border-top-color: var(--info-blue);
+        }
+
+        .dashboard-card.purple {
+            border-top-color: var(--purple);
+        }
+
+        .card-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 10px;
+            background-color: var(--accent-blue);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 15px;
+            font-size: 22px;
+        }
+
+        .card-icon.warning {
+            background-color: var(--warning-orange);
+        }
+
+        .card-icon.success {
+            background-color: var(--success-green);
+        }
+
+        .card-icon.danger {
+            background-color: var(--danger-red);
+        }
+
+        .card-icon.info {
+            background-color: var(--info-blue);
+        }
+
+        .card-icon.purple {
+            background-color: var(--purple);
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--light-text);
+            margin-bottom: 10px;
+        }
+
+        .card-value {
+            font-size: 36px;
+            font-weight: 700;
+            color: var(--light-text);
+            margin-bottom: 5px;
+        }
+
+        .card-subtitle {
+            font-size: 14px;
+            color: var(--neutral-gray);
+            margin-bottom: 10px;
+        }
+
+        .card-detail {
+            font-size: 12px;
+            color: var(--neutral-gray);
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+        }
+
+        /* Panel de conteo de personas */
+        .people-counter-container {
+            background-color: var(--secondary-dark);
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 40px;
+            border: 1px solid var(--accent-blue);
+        }
+
+        .people-counter-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .people-counter-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--light-text);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .people-counter-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .people-counter-card {
+            background-color: rgba(32, 42, 68, 0.3);
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.3s;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .people-counter-card:hover {
+            transform: translateY(-3px);
+            background-color: rgba(32, 42, 68, 0.5);
+            border-color: var(--accent-blue);
+        }
+
+        .people-counter-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background-color: var(--purple);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+            font-size: 24px;
+        }
+
+        .people-counter-value {
+            font-size: 42px;
+            font-weight: 700;
+            color: var(--light-text);
+            margin-bottom: 5px;
+        }
+
+        .people-counter-label {
+            font-size: 16px;
+            color: var(--neutral-gray);
+            margin-bottom: 10px;
+        }
+
+        .people-counter-trend {
+            font-size: 12px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            display: inline-block;
+        }
+
+        .trend-up {
+            background-color: rgba(76, 175, 80, 0.2);
+            color: var(--success-green);
+        }
+
+        .trend-down {
+            background-color: rgba(244, 67, 54, 0.2);
+            color: var(--danger-red);
+        }
+
+        .trend-neutral {
+            background-color: rgba(33, 150, 243, 0.2);
+            color: var(--info-blue);
+        }
+
+        .people-list {
+            margin-top: 30px;
+        }
+
+        .people-list-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--light-text);
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .people-table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: rgba(32, 42, 68, 0.2);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .people-table th {
+            background-color: var(--accent-blue);
+            color: var(--light-text);
+            padding: 12px 15px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .people-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            font-size: 14px;
+        }
+
+        .people-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .people-table tr:hover {
+            background-color: rgba(32, 42, 68, 0.3);
+        }
+
+        .person-id {
+            font-weight: 600;
+            color: var(--light-text);
+        }
+
+        .person-activity {
+            font-size: 12px;
+            color: var(--neutral-gray);
+        }
+
+        .person-status {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-active {
+            background-color: rgba(76, 175, 80, 0.2);
+            color: var(--success-green);
+        }
+
+        .status-inactive {
+            background-color: rgba(158, 158, 158, 0.2);
+            color: #9E9E9E;
+        }
+
+        .person-location {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .location-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: var(--info-blue);
+        }
+
+        /* ESTILOS ESPECÍFICOS PARA HOE MONITOR */
+        .hoe-container {
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: calc(100vh - 60px);
+        }
+
+        .hoe-header {
             background: var(--bg-secondary);
             border-bottom: 1px solid var(--border-color);
             padding: 12px 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            margin: -30px -30px 30px -30px;
         }
 
-        .header h1 {
+        .hoe-header h1 {
             font-size: 1.3rem;
             display: flex;
             align-items: center;
@@ -59,49 +508,50 @@
             animation: pulse 2s infinite;
         }
 
-        .status-dot.connected { background: var(--accent-green); }
+        .status-dot.connected {
+            background: var(--accent-green);
+            animation: pulse 1s infinite;
+        }
 
         @keyframes pulse {
             0%, 100% { opacity: 1; }
             50% { opacity: 0.5; }
         }
 
-        .main-container {
+        .hoe-main-container {
             display: grid;
             grid-template-columns: 1fr 380px;
-            height: calc(100vh - 56px);
+            gap: 15px;
+            height: calc(100vh - 200px);
         }
 
-        .left-panel {
+        .hoe-left-panel {
             display: grid;
             grid-template-rows: auto 1fr;
             gap: 15px;
-            padding: 15px;
             overflow: hidden;
         }
 
-        .top-section {
+        .hoe-top-section {
             display: grid;
             grid-template-columns: 1fr 1fr 1fr;
             gap: 15px;
         }
 
-        .card {
+        .hoe-card {
             background: var(--bg-secondary);
             border: 1px solid var(--border-color);
             border-radius: 8px;
             padding: 15px;
         }
 
-        .card-title {
+        .hoe-card-title {
             font-size: 0.75rem;
             text-transform: uppercase;
             color: var(--text-secondary);
             margin-bottom: 10px;
             letter-spacing: 0.5px;
         }
-
-        .current-state { text-align: center; }
 
         .state-display {
             font-size: 3rem;
@@ -213,7 +663,9 @@
             margin-bottom: 20px;
         }
 
-        .step-connector.completed { background: var(--accent-green); }
+        .step-connector.completed {
+            background: var(--accent-green);
+        }
 
         .history-section {
             overflow: hidden;
@@ -241,8 +693,14 @@
             transition: all 0.2s ease;
         }
 
-        .history-item.completed { border-left-color: var(--accent-green); }
-        .history-item.failed { border-left-color: var(--accent-red); }
+        .history-item.completed {
+            border-left-color: var(--accent-green);
+        }
+
+        .history-item.failed {
+            border-left-color: var(--accent-red);
+        }
+
         .history-item.in-progress {
             border-left-color: var(--accent-blue);
             background: rgba(88, 166, 255, 0.1);
@@ -315,11 +773,13 @@
             font-size: 0.8rem;
         }
 
-        .right-panel {
+        .hoe-right-panel {
             background: var(--bg-secondary);
             border-left: 1px solid var(--border-color);
             display: flex;
             flex-direction: column;
+            border-radius: 8px;
+            overflow: hidden;
         }
 
         .terminal-header {
@@ -330,9 +790,15 @@
             align-items: center;
         }
 
-        .terminal-title { font-size: 0.85rem; font-weight: 600; }
+        .terminal-title {
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
 
-        .terminal-controls { display: flex; gap: 8px; }
+        .terminal-controls {
+            display: flex;
+            gap: 8px;
+        }
 
         .terminal-btn {
             background: var(--bg-tertiary);
@@ -360,14 +826,14 @@
             flex: 1;
             overflow-y: auto;
             padding: 10px;
-            font-family: 'JetBrains Mono', monospace;
+            font-family: 'Courier New', monospace;
             font-size: 0.8rem;
             line-height: 1.5;
         }
 
         .log-entry {
             padding: 3px 0;
-            border-bottom: 1px solid rgba(255,255,255,0.03);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
         }
 
         .log-time {
@@ -388,360 +854,916 @@
             font-size: 0.75rem;
         }
 
-        .log-stat { display: flex; align-items: center; gap: 5px; }
+        .log-stat {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
 
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: var(--bg-primary); }
-        ::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 3px; }
-
+        /* Responsive */
         @media (max-width: 1200px) {
-            .main-container {
+            .hoe-main-container {
                 grid-template-columns: 1fr;
-                grid-template-rows: 1fr 300px;
+                grid-template-rows: 1fr auto;
+                height: auto;
+                min-height: calc(100vh - 200px);
             }
-            .right-panel {
+            
+            .hoe-right-panel {
                 border-left: none;
                 border-top: 1px solid var(--border-color);
+                min-height: 300px;
+            }
+        }
+
+        @media (max-width: 900px) {
+            .hoe-top-section {
+                grid-template-columns: 1fr;
+            }
+            
+            .state-display {
+                font-size: 2rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .history-item {
+                grid-template-columns: 1fr;
+                gap: 5px;
+            }
+            
+            .history-step-badges {
+                justify-content: center;
+            }
+        }
+
+        /* Scrollbar personalizada */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-primary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-secondary);
+        }
+
+        /* Botón menú móvil */
+        .menu-toggle {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 101;
+            width: 40px;
+            height: 40px;
+            background-color: var(--accent-blue);
+            border: none;
+            border-radius: 8px;
+            color: var(--light-text);
+            font-size: 20px;
+            cursor: pointer;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .menu-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 99;
+        }
+
+        .menu-overlay.active {
+            display: block;
+        }
+
+        @media (max-width: 768px) {
+            .menu-toggle {
+                display: flex;
+            }
+            
+            .sidebar {
+                transform: translateX(-100%);
+                width: 280px;
+                box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+            }
+            
+            .sidebar.mobile-open {
+                transform: translateX(0);
+            }
+            
+            .main-content {
+                margin-left: 0;
+                width: 100%;
+                padding: 70px 20px 20px;
+            }
+            
+            .hoe-header {
+                margin: -20px -20px 20px -20px;
+                padding: 15px 20px;
+            }
+            
+            .hoe-main-container {
+                height: auto;
+                min-height: calc(100vh - 150px);
+            }
+        }
+
+        @media (max-width: 480px) {
+            .main-content {
+                padding: 70px 15px 15px;
+            }
+            
+            .hoe-header h1 {
+                font-size: 1.1rem;
             }
         }
     </style>
 </head>
 <body>
-    <div class="header">
-        <h1>🏭 HOE Monitor <span style="font-size: 0.8rem; color: var(--text-secondary);">Bautista Figueroa</span></h1>
-        <div class="connection-status">
-            <div class="status-dot" id="connectionDot"></div>
-            <span id="connectionText">Desconectado</span>
+    <!-- Botón menú móvil -->
+    <button class="menu-toggle" id="menu-toggle">
+        <i class="fas fa-bars"></i>
+    </button>
+    
+    <!-- Overlay móvil -->
+    <div class="menu-overlay" id="menu-overlay"></div>
+    
+    <!-- Panel lateral -->
+    <aside class="sidebar" id="sidebar">
+        <div class="logo-container">
+            <div class="logo-main">SEISHIN</div>
+            <div class="logo-subtitle">Monitoreo Inteligente</div>
         </div>
-    </div>
-
-    <div class="main-container">
-        <div class="left-panel">
-            <div class="top-section">
-                <div class="card current-state">
-                    <div class="card-title">Estado Actual</div>
-                    <div class="state-display" id="currentState">S0</div>
-                    <div class="state-step" id="currentStepDesc">Esperando inicio...</div>
-                    <div class="process-id">ID: <span id="currentProcessId">--------</span></div>
-                </div>
-
-                <div class="card">
-                    <div class="card-title">Estadísticas de Sesión</div>
-                    <div class="stats-grid">
-                        <div class="stat-item">
-                            <div class="stat-value success" id="statCompleted">0</div>
-                            <div class="stat-label">Completados</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-value error" id="statFailed">0</div>
-                            <div class="stat-label">Fallidos</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-value warning" id="statSkips">0</div>
-                            <div class="stat-label">Saltos</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-value info" id="statTimeouts">0</div>
-                            <div class="stat-label">Timeouts</div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="card">
-                    <div class="card-title">Progreso del Proceso</div>
-                    <div class="steps-timeline">
-                        <div class="step-node"><div class="step-circle" id="step1">1</div><div class="step-label">Botella</div></div>
-                        <div class="step-connector" id="conn1"></div>
-                        <div class="step-node"><div class="step-circle" id="step2">2</div><div class="step-label">Bot+Per</div></div>
-                        <div class="step-connector" id="conn2"></div>
-                        <div class="step-node"><div class="step-circle" id="step3">3</div><div class="step-label">Zona 1</div></div>
-                        <div class="step-connector" id="conn3"></div>
-                        <div class="step-node"><div class="step-circle" id="step4">4</div><div class="step-label">Zona 2</div></div>
-                        <div class="step-connector" id="conn4"></div>
-                        <div class="step-node"><div class="step-circle" id="step5">5</div><div class="step-label">Zona 3</div></div>
-                        <div class="step-connector" id="conn5"></div>
-                        <div class="step-node"><div class="step-circle" id="step6">6</div><div class="step-label">Retorno</div></div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="card history-section">
-                <div class="card-title">Historial de Procesos (en vivo)</div>
-                <div class="history-list" id="historyList"></div>
-            </div>
-        </div>
-
-        <div class="right-panel">
-            <div class="terminal-header">
-                <div class="terminal-title">📟 Terminal</div>
-                <div class="terminal-controls">
-                    <button class="terminal-btn active" id="autoScrollBtn" onclick="toggleAutoScroll()">Auto-scroll</button>
-                    <button class="terminal-btn" onclick="clearLogs()">Limpiar</button>
-                </div>
-            </div>
-            <div class="terminal-body" id="terminalBody"></div>
-            <div class="log-stats">
-                <div class="log-stat">Total: <strong id="logTotal">0</strong></div>
-                <div class="log-stat" style="color: var(--accent-green)">OK: <strong id="logSuccess">0</strong></div>
-                <div class="log-stat" style="color: var(--accent-orange)">Warn: <strong id="logWarning">0</strong></div>
-                <div class="log-stat" style="color: var(--accent-red)">Err: <strong id="logError">0</strong></div>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        const WS_URL = 'ws://localhost:8765';
-        const MAX_LOGS = 500;
-        const MAX_HISTORY = 50;
-
-        let ws = null;
-        let autoScroll = true;
-        let logCounts = { total: 0, success: 0, warning: 0, error: 0 };
-        let stats = { completed: 0, failed: 0, skips: 0, timeouts: 0 };
-        let processes = new Map();
-        let currentProcessId = null;
-
-        const STEP_DESCRIPTIONS = {
-            'S0': 'Esperando inicio...',
-            'S1': 'Paso 1: Botella detectada',
-            'S2': 'Paso 2: Botella + Persona',
-            'S3': 'Paso 3: Botella en zona 1',
-            'S4': 'Paso 4: Persona en zona 2',
-            'S5': 'Paso 5: Persona en zona 3',
-            'S6': 'Paso 6: Botella retornó'
-        };
-
-        // Mapeo estado -> paso completado
-        const STATE_TO_STEP = { 'S1': 1, 'S2': 2, 'S3': 3, 'S4': 4, 'S5': 5 };
-
-        function connect() {
-            ws = new WebSocket(WS_URL);
-            
-            ws.onopen = () => {
-                document.getElementById('connectionDot').classList.add('connected');
-                document.getElementById('connectionText').textContent = 'Conectado';
-                addLog('Sistema conectado', 'SUCCESS');
-            };
-            
-            ws.onclose = () => {
-                document.getElementById('connectionDot').classList.remove('connected');
-                document.getElementById('connectionText').textContent = 'Reconectando...';
-                setTimeout(connect, 1500);
-            };
-            
-            ws.onmessage = (event) => {
-                try {
-                    handleMessage(JSON.parse(event.data));
-                } catch (e) {}
-            };
-        }
-
-        function handleMessage(data) {
-            if (data.type === 'LOG') {
-                addLog(data.message, data.level);
-            } else if (data.type === 'EVENT') {
-                handleEvent(data);
-            }
-        }
-
-        function handleEvent(data) {
-            const { event_type, process_id, state, step, rule } = data;
-            const shortId = process_id ? process_id.substring(0, 8) : '--------';
-            
-            currentProcessId = process_id;
-            document.getElementById('currentProcessId').textContent = shortId;
-            
-            if (state) updateState(state);
-
-            // Asegurar que el proceso existe
-            const proc = getOrCreateProcess(process_id);
-            
-            // Actualizar pasos basado en estado actual
-            if (state && STATE_TO_STEP[state]) {
-                const completedStep = STATE_TO_STEP[state];
-                for (let i = 1; i <= completedStep; i++) {
-                    if (!proc.steps.includes(i)) proc.steps.push(i);
-                }
-                proc.lastStep = completedStep;
-                proc.currentStep = completedStep + 1;
-            }
-            
-            switch (event_type) {
-                case 'STEP_OK':
-                    if (!proc.steps.includes(step)) proc.steps.push(step);
-                    proc.lastStep = Math.max(proc.lastStep, step);
-                    proc.currentStep = step + 1;
-                    updateTimeline(proc.steps, step);
-                    break;
-                    
-                case 'PROCESS_COMPLETE':
-                    proc.status = 'completed';
-                    proc.duration = data.duration_total;
-                    proc.steps = [1, 2, 3, 4, 5, 6];
-                    proc.currentStep = null;
-                    stats.completed++;
-                    updateStats();
-                    resetTimeline();
-                    break;
-                    
-                case 'VIOLATION':
-                    proc.status = 'failed';
-                    proc.errorStep = step;
-                    proc.errorReason = rule;
-                    proc.currentStep = null;
-                    if (rule && rule.includes('SKIPPED')) stats.skips++;
-                    else stats.timeouts++;
-                    stats.failed++;
-                    updateStats();
-                    break;
-                    
-                case 'RESET':
-                    if (data.reason !== 'complete' && proc.status === 'in-progress') {
-                        proc.status = 'failed';
-                        proc.errorReason = data.reason;
-                        proc.currentStep = null;
-                    }
-                    break;
-            }
-            
-            renderHistory();
-        }
-
-        function getOrCreateProcess(processId) {
-            if (!processes.has(processId)) {
-                processes.set(processId, {
-                    id: processId,
-                    shortId: processId.substring(0, 8),
-                    steps: [],
-                    status: 'in-progress',
-                    startTime: Date.now(),
-                    lastStep: 0,
-                    currentStep: 1,
-                    errorStep: null,
-                    errorReason: null
-                });
-            }
-            return processes.get(processId);
-        }
-
-        function updateState(state) {
-            document.getElementById('currentState').textContent = state;
-            document.getElementById('currentStepDesc').textContent = STEP_DESCRIPTIONS[state] || state;
-            document.getElementById('currentState').style.color = state === 'S0' ? 'var(--text-secondary)' : 'var(--accent-blue)';
-        }
-
-        function updateTimeline(completedSteps, currentStep) {
-            for (let i = 1; i <= 6; i++) {
-                const stepEl = document.getElementById(`step${i}`);
-                const connEl = document.getElementById(`conn${i}`);
-                stepEl.classList.remove('completed', 'current');
-                if (connEl) connEl.classList.remove('completed');
-                
-                if (completedSteps.includes(i)) {
-                    stepEl.classList.add('completed');
-                    if (connEl) connEl.classList.add('completed');
-                } else if (i === currentStep + 1) {
-                    stepEl.classList.add('current');
-                }
-            }
-        }
-
-        function resetTimeline() {
-            for (let i = 1; i <= 6; i++) {
-                document.getElementById(`step${i}`).classList.remove('completed', 'current');
-                const conn = document.getElementById(`conn${i}`);
-                if (conn) conn.classList.remove('completed');
-            }
-        }
-
-        function updateStats() {
-            document.getElementById('statCompleted').textContent = stats.completed;
-            document.getElementById('statFailed').textContent = stats.failed;
-            document.getElementById('statSkips').textContent = stats.skips;
-            document.getElementById('statTimeouts').textContent = stats.timeouts;
-        }
-
-        function renderHistory() {
-            const container = document.getElementById('historyList');
-            const sorted = Array.from(processes.values()).sort((a, b) => b.startTime - a.startTime).slice(0, MAX_HISTORY);
-            
-            container.innerHTML = sorted.map(proc => {
-                const elapsed = proc.duration || ((Date.now() - proc.startTime) / 1000);
-                const timeStr = elapsed < 60 ? `${elapsed.toFixed(1)}s` : `${(elapsed/60).toFixed(1)}m`;
-                
-                let stepBadges = '';
-                for (let i = 1; i <= 6; i++) {
-                    let cls = '';
-                    if (proc.steps.includes(i)) cls = 'done';
-                    else if (proc.status === 'in-progress' && proc.currentStep === i) cls = 'current';
-                    else if (proc.errorStep === i) cls = 'error';
-                    stepBadges += `<div class="step-badge ${cls}">${i}</div>`;
-                }
-                
-                const statusText = proc.status === 'completed' ? '✓ OK' : proc.status === 'failed' ? '✗ FALLO' : `● PASO ${proc.currentStep || '?'}`;
-                
-                return `
-                    <div class="history-item ${proc.status}">
-                        <div class="history-id">${proc.shortId}</div>
-                        <div class="history-step-badges">${stepBadges}</div>
-                        <div><span class="status-badge ${proc.status}">${statusText}</span></div>
-                        <div class="history-time">${timeStr}</div>
-                    </div>
-                `;
-            }).join('');
-        }
-
-        function addLog(message, level = 'INFO') {
-            const container = document.getElementById('terminalBody');
-            const time = new Date().toLocaleTimeString('es-ES', { hour12: false });
-            
-            const entry = document.createElement('div');
-            entry.className = `log-entry ${level}`;
-            entry.innerHTML = `<span class="log-time">${time}</span><span class="log-msg">${escapeHtml(message)}</span>`;
-            container.appendChild(entry);
-            
-            while (container.children.length > MAX_LOGS) container.removeChild(container.firstChild);
-            
-            logCounts.total++;
-            if (level === 'SUCCESS') logCounts.success++;
-            else if (level === 'WARNING') logCounts.warning++;
-            else if (level === 'ERROR') logCounts.error++;
-            
-            document.getElementById('logTotal').textContent = logCounts.total;
-            document.getElementById('logSuccess').textContent = logCounts.success;
-            document.getElementById('logWarning').textContent = logCounts.warning;
-            document.getElementById('logError').textContent = logCounts.error;
-            
-            if (autoScroll) container.scrollTop = container.scrollHeight;
-        }
-
-        function clearLogs() {
-            document.getElementById('terminalBody').innerHTML = '';
-            logCounts = { total: 0, success: 0, warning: 0, error: 0 };
-            document.getElementById('logTotal').textContent = '0';
-            document.getElementById('logSuccess').textContent = '0';
-            document.getElementById('logWarning').textContent = '0';
-            document.getElementById('logError').textContent = '0';
-        }
-
-        function toggleAutoScroll() {
-            autoScroll = !autoScroll;
-            document.getElementById('autoScrollBtn').classList.toggle('active', autoScroll);
-        }
-
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
-
-        connect();
-        renderHistory();
         
-        // Actualizar tiempos cada segundo
-        setInterval(() => {
-            if (processes.size > 0) renderHistory();
-        }, 1000);
+        <ul class="nav-menu">
+            <li class="nav-item">
+                <a href="javascript:void(0)" class="nav-link active" onclick="showPage('home')">
+                    <i class="fas fa-home"></i>
+                    <span>Inicio</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="javascript:void(0)" class="nav-link" onclick="showPage('hoe')">
+                    <i class="fas fa-industry"></i>
+                    <span>H.O.E Monitor</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="javascript:void(0)" class="nav-link" onclick="showPage('reports')">
+                    <i class="fas fa-file-alt"></i>
+                    <span>Reportes</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="javascript:void(0)" class="nav-link" onclick="showPage('people')">
+                    <i class="fas fa-users"></i>
+                    <span>Conteo Personas</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="javascript:void(0)" class="nav-link" onclick="showPage('live')">
+                    <i class="fas fa-eye"></i>
+                    <span>Vista en Vivo</span>
+                </a>
+            </li>
+        </ul>
+        
+        <div class="user-info">
+            <div class="user-avatar">JS</div>
+            <div class="user-details">
+                <h4>Juan Sánchez</h4>
+                <p>Supervisor de Seguridad</p>
+            </div>
+        </div>
+    </aside>
+    
+    <!-- Página Inicio -->
+    <main class="main-content active" id="home-page">
+        <div class="header">
+            <div class="header-left">
+                <h1 class="page-title">Bienvenido al Sistema</h1>
+                <p class="page-subtitle">Eventos detectados por el sistema de cámaras Seishin</p>
+            </div>
+            <div class="header-right">
+                <div class="time-indicator">
+                    <i class="far fa-clock"></i>
+                    <span id="current-time">Cargando...</span>
+                </div>
+                <div class="update-indicator" id="update-indicator">
+                    <div class="update-dot"></div>
+                    <span>Actualizando cada 10s</span>
+                </div>
+                <button class="refresh-btn" id="refresh-data">
+                    <i class="fas fa-sync-alt"></i> Actualizar
+                </button>
+            </div>
+        </div>
+        
+        <div class="loading-container" id="loading">
+            <div class="loading-spinner"></div>
+            <p>Conectando al sistema de monitoreo...</p>
+            <p style="font-size: 14px; margin-top: 10px; color: var(--neutral-gray);">
+                Obteniendo datos de eventos en tiempo real
+            </p>
+        </div>
+        
+        <div class="error-message" id="error-message" style="display: none;">
+            <p><i class="fas fa-exclamation-triangle"></i> <strong>Error de conexión:</strong> <span id="error-text"></span></p>
+            <p style="margin-top: 10px; font-size: 14px;">
+                Mostrando datos de ejemplo. Verifica la conexión con Google Sheets.
+            </p>
+        </div>
+        
+        <div id="dashboard-container" style="display: none;">
+            <div class="dashboard-cards">
+                <div class="dashboard-card info">
+                    <div class="card-icon info">
+                        <i class="fas fa-video"></i>
+                    </div>
+                    <h3 class="card-title">Cámaras Activas</h3>
+                    <div class="card-value" id="cameras-active">8</div>
+                    <p class="card-subtitle">de 12 cámaras en línea</p>
+                    <div class="card-detail">
+                        <span>Última verificación: <span id="cameras-check">hace 2 min</span></span>
+                    </div>
+                </div>
+                
+                <div class="dashboard-card success">
+                    <div class="card-icon success">
+                        <i class="fas fa-user-check"></i>
+                    </div>
+                    <h3 class="card-title">Personas Detectadas</h3>
+                    <div class="card-value" id="people-detected">142</div>
+                    <p class="card-subtitle">en las últimas 24 horas</p>
+                    <div class="card-detail">
+                        <span>Tendencia: <span class="trend-up">+12%</span></span>
+                    </div>
+                </div>
+                
+                <div class="dashboard-card warning">
+                    <div class="card-icon warning">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <h3 class="card-title">Eventos Detectados</h3>
+                    <div class="card-value" id="events-detected">23</div>
+                    <p class="card-subtitle">en las últimas 24 horas</p>
+                    <div class="card-detail">
+                        <span>Críticos: <span style="color: var(--danger-red)">3</span></span>
+                    </div>
+                </div>
+                
+                <div class="dashboard-card purple">
+                    <div class="card-icon purple">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <h3 class="card-title">Actividad del Sistema</h3>
+                    <div class="card-value" id="system-uptime">99.8%</div>
+                    <p class="card-subtitle">Tiempo activo en 30 días</p>
+                    <div class="card-detail">
+                        <span>Último reinicio: <span>hace 7 días</span></span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="people-counter-container">
+                <div class="people-counter-header">
+                    <h2 class="people-counter-title">
+                        <i class="fas fa-users"></i>
+                        Conteo de Personas en Tiempo Real
+                    </h2>
+                    <div style="font-size: 14px; color: var(--neutral-gray);">
+                        Última actualización: <span id="last-update-time">hace 10 segundos</span>
+                    </div>
+                </div>
+                
+                <div class="people-counter-grid">
+                    <div class="people-counter-card">
+                        <div class="people-counter-icon">
+                            <i class="fas fa-door-open"></i>
+                        </div>
+                        <div class="people-counter-value" id="entrance-count">8</div>
+                        <div class="people-counter-label">Entrada Principal</div>
+                        <div class="people-counter-trend trend-up">+2</div>
+                    </div>
+                    
+                    <div class="people-counter-card">
+                        <div class="people-counter-icon">
+                            <i class="fas fa-door-closed"></i>
+                        </div>
+                        <div class="people-counter-value" id="exit-count">5</div>
+                        <div class="people-counter-label">Salida Principal</div>
+                        <div class="people-counter-trend trend-neutral">0</div>
+                    </div>
+                    
+                    <div class="people-counter-card">
+                        <div class="people-counter-icon">
+                            <i class="fas fa-warehouse"></i>
+                        </div>
+                        <div class="people-counter-value" id="warehouse-count">12</div>
+                        <div class="people-counter-label">Almacén</div>
+                        <div class="people-counter-trend trend-up">+3</div>
+                    </div>
+                    
+                    <div class="people-counter-card">
+                        <div class="people-counter-icon">
+                            <i class="fas fa-building"></i>
+                        </div>
+                        <div class="people-counter-value" id="office-count">24</div>
+                        <div class="people-counter-label">Oficinas</div>
+                        <div class="people-counter-trend trend-down">-1</div>
+                    </div>
+                </div>
+                
+                <div class="people-list">
+                    <h3 class="people-list-title">
+                        <i class="fas fa-list"></i>
+                        Personas Detectadas Recientemente
+                    </h3>
+                    <div class="people-table-container">
+                        <table class="people-table">
+                            <thead>
+                                <tr>
+                                    <th>ID Persona</th>
+                                    <th>Ubicación</th>
+                                    <th>Última Actividad</th>
+                                    <th>Estado</th>
+                                    <th>Duración</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="person-id">P-0234</td>
+                                    <td class="person-location">
+                                        <div class="location-dot"></div>
+                                        Entrada Principal
+                                    </td>
+                                    <td>
+                                        <div>Detectado</div>
+                                        <div class="person-activity">hace 2 min 34s</div>
+                                    </td>
+                                    <td><span class="person-status status-active">Activo</span></td>
+                                    <td>4m 12s</td>
+                                </tr>
+                                <tr>
+                                    <td class="person-id">P-0233</td>
+                                    <td class="person-location">
+                                        <div class="location-dot" style="background-color: var(--warning-orange);"></div>
+                                        Almacén
+                                    </td>
+                                    <td>
+                                        <div>Cruce de línea</div>
+                                        <div class="person-activity">hace 5 min 12s</div>
+                                    </td>
+                                    <td><span class="person-status status-active">Activo</span></td>
+                                    <td>12m 45s</td>
+                                </tr>
+                                <tr>
+                                    <td class="person-id">P-0232</td>
+                                    <td class="person-location">
+                                        <div class="location-dot" style="background-color: var(--success-green);"></div>
+                                        Oficinas
+                                    </td>
+                                    <td>
+                                        <div>Periodicidad</div>
+                                        <div class="person-activity">hace 8 min 03s</div>
+                                    </td>
+                                    <td><span class="person-status status-inactive">Inactivo</span></td>
+                                    <td>23m 17s</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <!-- Página HOE Monitor -->
+    <main class="main-content hoe-container" id="hoe-page">
+        <div class="hoe-header">
+            <h1><i class="fas fa-industry"></i> HOE Monitor <span style="font-size: 0.8rem; color: var(--text-secondary);">Bautista Figueroa</span></h1>
+            <div class="connection-status">
+                <div class="status-dot" id="connectionDot"></div>
+                <span id="connectionText">Desconectado</span>
+            </div>
+        </div>
+
+        <div class="hoe-main-container">
+            <div class="hoe-left-panel">
+                <div class="hoe-top-section">
+                    <div class="hoe-card current-state">
+                        <div class="hoe-card-title">Estado Actual</div>
+                        <div class="state-display" id="currentState">S0</div>
+                        <div class="state-step" id="currentStepDesc">Esperando inicio...</div>
+                        <div class="process-id">ID: <span id="currentProcessId">--------</span></div>
+                    </div>
+
+                    <div class="hoe-card">
+                        <div class="hoe-card-title">Estadísticas de Sesión</div>
+                        <div class="stats-grid">
+                            <div class="stat-item">
+                                <div class="stat-value success" id="statCompleted">0</div>
+                                <div class="stat-label">Completados</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value error" id="statFailed">0</div>
+                                <div class="stat-label">Fallidos</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value warning" id="statSkips">0</div>
+                                <div class="stat-label">Saltos</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value info" id="statTimeouts">0</div>
+                                <div class="stat-label">Timeouts</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="hoe-card">
+                        <div class="hoe-card-title">Progreso del Proceso</div>
+                        <div class="steps-timeline">
+                            <div class="step-node"><div class="step-circle" id="step1">1</div><div class="step-label">Botella</div></div>
+                            <div class="step-connector" id="conn1"></div>
+                            <div class="step-node"><div class="step-circle" id="step2">2</div><div class="step-label">Bot+Per</div></div>
+                            <div class="step-connector" id="conn2"></div>
+                            <div class="step-node"><div class="step-circle" id="step3">3</div><div class="step-label">Zona 1</div></div>
+                            <div class="step-connector" id="conn3"></div>
+                            <div class="step-node"><div class="step-circle" id="step4">4</div><div class="step-label">Zona 2</div></div>
+                            <div class="step-connector" id="conn4"></div>
+                            <div class="step-node"><div class="step-circle" id="step5">5</div><div class="step-label">Zona 3</div></div>
+                            <div class="step-connector" id="conn5"></div>
+                            <div class="step-node"><div class="step-circle" id="step6">6</div><div class="step-label">Retorno</div></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="hoe-card history-section">
+                    <div class="hoe-card-title">Historial de Procesos (en vivo)</div>
+                    <div class="history-list" id="historyList"></div>
+                </div>
+            </div>
+
+            <div class="hoe-right-panel">
+                <div class="terminal-header">
+                    <div class="terminal-title"><i class="fas fa-terminal"></i> Terminal</div>
+                    <div class="terminal-controls">
+                        <button class="terminal-btn active" id="autoScrollBtn">Auto-scroll</button>
+                        <button class="terminal-btn" id="clearLogsBtn">Limpiar</button>
+                    </div>
+                </div>
+                <div class="terminal-body" id="terminalBody"></div>
+                <div class="log-stats">
+                    <div class="log-stat">Total: <strong id="logTotal">0</strong></div>
+                    <div class="log-stat" style="color: var(--accent-green)">OK: <strong id="logSuccess">0</strong></div>
+                    <div class="log-stat" style="color: var(--accent-orange)">Warn: <strong id="logWarning">0</strong></div>
+                    <div class="log-stat" style="color: var(--accent-red)">Err: <strong id="logError">0</strong></div>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <!-- Otras páginas -->
+    <main class="main-content" id="reports-page">
+        <div class="header">
+            <h1 class="page-title">REPORTES DE ACTIVIDAD</h1>
+            <p class="page-subtitle">Análisis y estadísticas del sistema</p>
+        </div>
+        <div class="loading-container">
+            <p>Sistema de reportes - En desarrollo</p>
+        </div>
+    </main>
+    
+    <main class="main-content" id="people-page">
+        <div class="header">
+            <h1 class="page-title">CONTEO DE PERSONAS</h1>
+            <p class="page-subtitle">Monitoreo de personas detectadas en tiempo real</p>
+        </div>
+        <div class="loading-container">
+            <p>Panel de conteo de personas - En desarrollo</p>
+        </div>
+    </main>
+    
+    <main class="main-content" id="live-page">
+        <div class="header">
+            <h1 class="page-title">VISTA EN VIVO</h1>
+            <p class="page-subtitle">Monitoreo en tiempo real de las cámaras</p>
+        </div>
+        <div class="loading-container">
+            <p>Vista en vivo - En desarrollo</p>
+        </div>
+    </main>
+    
+    <script>
+        // Script del menú lateral y navegación
+        document.addEventListener('DOMContentLoaded', function() {
+            const menuToggle = document.getElementById('menu-toggle');
+            const menuOverlay = document.getElementById('menu-overlay');
+            const sidebar = document.getElementById('sidebar');
+            const navLinks = document.querySelectorAll('.nav-link');
+            
+            menuToggle.addEventListener('click', function() {
+                sidebar.classList.toggle('mobile-open');
+                menuOverlay.classList.toggle('active');
+            });
+            
+            menuOverlay.addEventListener('click', function() {
+                sidebar.classList.remove('mobile-open');
+                menuOverlay.classList.remove('active');
+            });
+            
+            // Actualizar hora en tiempo real
+            function updateTime() {
+                const now = new Date();
+                const timeStr = now.toLocaleTimeString('es-ES', { 
+                    hour: '2-digit', 
+                    minute: '2-digit',
+                    second: '2-digit'
+                });
+                const dateStr = now.toLocaleDateString('es-ES', {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+                
+                const timeElement = document.getElementById('current-time');
+                if (timeElement) {
+                    timeElement.textContent = `${dateStr} - ${timeStr}`;
+                }
+            }
+            
+            updateTime();
+            setInterval(updateTime, 1000);
+            
+            // Mostrar dashboard después de simular carga
+            setTimeout(() => {
+                const loading = document.getElementById('loading');
+                const dashboard = document.getElementById('dashboard-container');
+                if (loading && dashboard) {
+                    loading.style.display = 'none';
+                    dashboard.style.display = 'block';
+                }
+            }, 1500);
+            
+            // Simular actualización de datos
+            function updateDashboardData() {
+                const peopleValues = ['entrance-count', 'exit-count', 'warehouse-count', 'office-count'];
+                peopleValues.forEach(id => {
+                    const element = document.getElementById(id);
+                    if (element) {
+                        const current = parseInt(element.textContent);
+                        const change = Math.floor(Math.random() * 3) - 1;
+                        const newValue = Math.max(0, current + change);
+                        element.textContent = newValue;
+                    }
+                });
+                
+                const lastUpdate = document.getElementById('last-update-time');
+                if (lastUpdate) {
+                    lastUpdate.textContent = 'hace 10 segundos';
+                }
+            }
+            
+            setInterval(updateDashboardData, 10000);
+            
+            // Botón de actualizar
+            const refreshBtn = document.getElementById('refresh-data');
+            if (refreshBtn) {
+                refreshBtn.addEventListener('click', updateDashboardData);
+            }
+        });
+        
+        // Función para cambiar de página
+        function showPage(pageId) {
+            // Ocultar todas las páginas
+            const pages = document.querySelectorAll('.main-content');
+            pages.forEach(page => {
+                page.classList.remove('active');
+            });
+            
+            // Mostrar la página solicitada
+            const targetPage = document.getElementById(pageId + '-page');
+            if (targetPage) {
+                targetPage.classList.add('active');
+            }
+            
+            // Actualizar menú activo
+            const navLinks = document.querySelectorAll('.nav-link');
+            navLinks.forEach(link => {
+                link.classList.remove('active');
+            });
+            
+            // Marcar el enlace activo
+            const activeLink = document.querySelector(`.nav-link[onclick*="'${pageId}'"]`);
+            if (activeLink) {
+                activeLink.classList.add('active');
+            }
+            
+            // Cerrar menú móvil si está abierto
+            const sidebar = document.getElementById('sidebar');
+            const menuOverlay = document.getElementById('menu-overlay');
+            sidebar.classList.remove('mobile-open');
+            menuOverlay.classList.remove('active');
+            
+            // Si es la página HOE, inicializar WebSocket
+            if (pageId === 'hoe') {
+                initializeHOESystem();
+            }
+        }
+        
+        // Script del HOE Monitor
+        function initializeHOESystem() {
+            const WS_URL = 'ws://localhost:8765';
+            const MAX_LOGS = 500;
+            const MAX_HISTORY = 50;
+
+            let ws = null;
+            let autoScroll = true;
+            let logCounts = { total: 0, success: 0, warning: 0, error: 0 };
+            let stats = { completed: 0, failed: 0, skips: 0, timeouts: 0 };
+            let processes = new Map();
+            let currentProcessId = null;
+
+            const STEP_DESCRIPTIONS = {
+                'S0': 'Esperando inicio...',
+                'S1': 'Paso 1: Botella detectada',
+                'S2': 'Paso 2: Botella + Persona',
+                'S3': 'Paso 3: Botella en zona 1',
+                'S4': 'Paso 4: Persona en zona 2',
+                'S5': 'Paso 5: Persona en zona 3',
+                'S6': 'Paso 6: Botella retornó'
+            };
+
+            const STATE_TO_STEP = { 'S1': 1, 'S2': 2, 'S3': 3, 'S4': 4, 'S5': 5 };
+
+            function connect() {
+                ws = new WebSocket(WS_URL);
+                
+                ws.onopen = () => {
+                    document.getElementById('connectionDot').classList.add('connected');
+                    document.getElementById('connectionText').textContent = 'Conectado';
+                    addLog('Sistema conectado', 'SUCCESS');
+                };
+                
+                ws.onclose = () => {
+                    document.getElementById('connectionDot').classList.remove('connected');
+                    document.getElementById('connectionText').textContent = 'Reconectando...';
+                    setTimeout(connect, 1500);
+                };
+                
+                ws.onmessage = (event) => {
+                    try {
+                        handleMessage(JSON.parse(event.data));
+                    } catch (e) {
+                        console.error('Error parsing message:', e);
+                    }
+                };
+            }
+
+            function handleMessage(data) {
+                if (data.type === 'LOG') {
+                    addLog(data.message, data.level);
+                } else if (data.type === 'EVENT') {
+                    handleEvent(data);
+                }
+            }
+
+            function handleEvent(data) {
+                const { event_type, process_id, state, step, rule } = data;
+                const shortId = process_id ? process_id.substring(0, 8) : '--------';
+                
+                currentProcessId = process_id;
+                document.getElementById('currentProcessId').textContent = shortId;
+                
+                if (state) updateState(state);
+
+                const proc = getOrCreateProcess(process_id);
+                
+                if (state && STATE_TO_STEP[state]) {
+                    const completedStep = STATE_TO_STEP[state];
+                    for (let i = 1; i <= completedStep; i++) {
+                        if (!proc.steps.includes(i)) proc.steps.push(i);
+                    }
+                    proc.lastStep = completedStep;
+                    proc.currentStep = completedStep + 1;
+                }
+                
+                switch (event_type) {
+                    case 'STEP_OK':
+                        if (!proc.steps.includes(step)) proc.steps.push(step);
+                        proc.lastStep = Math.max(proc.lastStep, step);
+                        proc.currentStep = step + 1;
+                        updateTimeline(proc.steps, step);
+                        break;
+                        
+                    case 'PROCESS_COMPLETE':
+                        proc.status = 'completed';
+                        proc.duration = data.duration_total;
+                        proc.steps = [1, 2, 3, 4, 5, 6];
+                        proc.currentStep = null;
+                        stats.completed++;
+                        updateStats();
+                        resetTimeline();
+                        break;
+                        
+                    case 'VIOLATION':
+                        proc.status = 'failed';
+                        proc.errorStep = step;
+                        proc.errorReason = rule;
+                        proc.currentStep = null;
+                        if (rule && rule.includes('SKIPPED')) stats.skips++;
+                        else stats.timeouts++;
+                        stats.failed++;
+                        updateStats();
+                        break;
+                        
+                    case 'RESET':
+                        if (data.reason !== 'complete' && proc.status === 'in-progress') {
+                            proc.status = 'failed';
+                            proc.errorReason = data.reason;
+                            proc.currentStep = null;
+                        }
+                        break;
+                }
+                
+                renderHistory();
+            }
+
+            function getOrCreateProcess(processId) {
+                if (!processes.has(processId)) {
+                    processes.set(processId, {
+                        id: processId,
+                        shortId: processId.substring(0, 8),
+                        steps: [],
+                        status: 'in-progress',
+                        startTime: Date.now(),
+                        lastStep: 0,
+                        currentStep: 1,
+                        errorStep: null,
+                        errorReason: null
+                    });
+                }
+                return processes.get(processId);
+            }
+
+            function updateState(state) {
+                document.getElementById('currentState').textContent = state;
+                document.getElementById('currentStepDesc').textContent = STEP_DESCRIPTIONS[state] || state;
+                document.getElementById('currentState').style.color = state === 'S0' ? 'var(--text-secondary)' : 'var(--accent-blue)';
+            }
+
+            function updateTimeline(completedSteps, currentStep) {
+                for (let i = 1; i <= 6; i++) {
+                    const stepEl = document.getElementById(`step${i}`);
+                    const connEl = document.getElementById(`conn${i}`);
+                    if (stepEl) stepEl.classList.remove('completed', 'current');
+                    if (connEl) connEl.classList.remove('completed');
+                    
+                    if (completedSteps.includes(i)) {
+                        if (stepEl) stepEl.classList.add('completed');
+                        if (connEl) connEl.classList.add('completed');
+                    } else if (i === currentStep + 1) {
+                        if (stepEl) stepEl.classList.add('current');
+                    }
+                }
+            }
+
+            function resetTimeline() {
+                for (let i = 1; i <= 6; i++) {
+                    const stepEl = document.getElementById(`step${i}`);
+                    const connEl = document.getElementById(`conn${i}`);
+                    if (stepEl) stepEl.classList.remove('completed', 'current');
+                    if (connEl) connEl.classList.remove('completed');
+                }
+            }
+
+            function updateStats() {
+                document.getElementById('statCompleted').textContent = stats.completed;
+                document.getElementById('statFailed').textContent = stats.failed;
+                document.getElementById('statSkips').textContent = stats.skips;
+                document.getElementById('statTimeouts').textContent = stats.timeouts;
+            }
+
+            function renderHistory() {
+                const container = document.getElementById('historyList');
+                if (!container) return;
+                
+                const sorted = Array.from(processes.values()).sort((a, b) => b.startTime - a.startTime).slice(0, MAX_HISTORY);
+                
+                container.innerHTML = sorted.map(proc => {
+                    const elapsed = proc.duration || ((Date.now() - proc.startTime) / 1000);
+                    const timeStr = elapsed < 60 ? `${elapsed.toFixed(1)}s` : `${(elapsed/60).toFixed(1)}m`;
+                    
+                    let stepBadges = '';
+                    for (let i = 1; i <= 6; i++) {
+                        let cls = '';
+                        if (proc.steps.includes(i)) cls = 'done';
+                        else if (proc.status === 'in-progress' && proc.currentStep === i) cls = 'current';
+                        else if (proc.errorStep === i) cls = 'error';
+                        stepBadges += `<div class="step-badge ${cls}">${i}</div>`;
+                    }
+                    
+                    const statusText = proc.status === 'completed' ? '✓ OK' : proc.status === 'failed' ? '✗ FALLO' : `● PASO ${proc.currentStep || '?'}`;
+                    
+                    return `
+                        <div class="history-item ${proc.status}">
+                            <div class="history-id">${proc.shortId}</div>
+                            <div class="history-step-badges">${stepBadges}</div>
+                            <div><span class="status-badge ${proc.status}">${statusText}</span></div>
+                            <div class="history-time">${timeStr}</div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            function addLog(message, level = 'INFO') {
+                const container = document.getElementById('terminalBody');
+                if (!container) return;
+                
+                const time = new Date().toLocaleTimeString('es-ES', { hour12: false });
+                
+                const entry = document.createElement('div');
+                entry.className = `log-entry ${level}`;
+                entry.innerHTML = `<span class="log-time">${time}</span><span class="log-msg">${escapeHtml(message)}</span>`;
+                container.appendChild(entry);
+                
+                while (container.children.length > MAX_LOGS) container.removeChild(container.firstChild);
+                
+                logCounts.total++;
+                if (level === 'SUCCESS') logCounts.success++;
+                else if (level === 'WARNING') logCounts.warning++;
+                else if (level === 'ERROR') logCounts.error++;
+                
+                document.getElementById('logTotal').textContent = logCounts.total;
+                document.getElementById('logSuccess').textContent = logCounts.success;
+                document.getElementById('logWarning').textContent = logCounts.warning;
+                document.getElementById('logError').textContent = logCounts.error;
+                
+                if (autoScroll) container.scrollTop = container.scrollHeight;
+            }
+
+            function clearLogs() {
+                const container = document.getElementById('terminalBody');
+                if (container) {
+                    container.innerHTML = '';
+                }
+                logCounts = { total: 0, success: 0, warning: 0, error: 0 };
+                document.getElementById('logTotal').textContent = '0';
+                document.getElementById('logSuccess').textContent = '0';
+                document.getElementById('logWarning').textContent = '0';
+                document.getElementById('logError').textContent = '0';
+            }
+
+            function toggleAutoScroll() {
+                autoScroll = !autoScroll;
+                const btn = document.getElementById('autoScrollBtn');
+                if (btn) {
+                    btn.classList.toggle('active', autoScroll);
+                }
+            }
+
+            function escapeHtml(text) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+
+            // Configurar botones
+            const autoScrollBtn = document.getElementById('autoScrollBtn');
+            const clearLogsBtn = document.getElementById('clearLogsBtn');
+            
+            if (autoScrollBtn) {
+                autoScrollBtn.addEventListener('click', toggleAutoScroll);
+            }
+            
+            if (clearLogsBtn) {
+                clearLogsBtn.addEventListener('click', clearLogs);
+            }
+
+            // Conectar WebSocket
+            connect();
+            renderHistory();
+            
+            // Actualizar tiempos cada segundo
+            setInterval(() => {
+                if (processes.size > 0) renderHistory();
+            }, 1000);
+        }
     </script>
 </body>
 </html>
